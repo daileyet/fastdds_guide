@@ -7,7 +7,7 @@ You can get sample code from [DDS helloworld code](../code/dds_helloword)
 IDL file is description of data types for communication.
 
 ```
-mkdir -p dds_helloword/src && cd dds_helloword/src
+mkdir -p dds_helloword/src/helloworld && cd dds_helloword/src/helloworld
 gedit HelloWorld.idl
 ```
 
@@ -34,7 +34,7 @@ You can follow [Official Sample Guide](https://fast-dds.docs.eprosima.com/en/lat
 ### add publisher participant
 
 ```shell
-cd dds_helloword/src
+cd dds_helloword/src/helloworld
 wget -O HelloWorldPublisher.cpp \
     https://raw.githubusercontent.com/eProsima/Fast-RTPS-docs/master/code/Examples/C++/DDSHelloWorld/src/HelloWorldPublisher.cpp
 ```
@@ -90,7 +90,7 @@ bool init()
 ### add subscriber participant
 
 ```shell
-cd dds_helloword/src
+cd dds_helloword/src/helloworld
 wget -O HelloWorldSubscriber.cpp \
     https://raw.githubusercontent.com/eProsima/Fast-RTPS-docs/master/code/Examples/C++/DDSHelloWorld/src/HelloWorldSubscriber.cpp
 ```
@@ -198,14 +198,24 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANG OR
 endif()
 
 message(STATUS "Configuring HelloWorld publisher/subscriber example...")
-file(GLOB DDS_HELLOWORLD_SOURCES_CXX "src/*.cxx")
+file(GLOB DDS_HELLOWORLD_SOURCES_CXX "src/helloworld/*.cxx")
 
-add_executable(DDSHelloWorldPublisher src/HelloWorldPublisher.cpp ${DDS_HELLOWORLD_SOURCES_CXX})
+add_executable(DDSHelloWorldPublisher src/helloworld/HelloWorldPublisher.cpp ${DDS_HELLOWORLD_SOURCES_CXX})
 target_link_libraries(DDSHelloWorldPublisher fastrtps fastcdr)
 
-add_executable(DDSHelloWorldSubscriber src/HelloWorldSubscriber.cpp ${DDS_HELLOWORLD_SOURCES_CXX})
+add_executable(DDSHelloWorldSubscriber src/helloworld/HelloWorldSubscriber.cpp ${DDS_HELLOWORLD_SOURCES_CXX})
 target_link_libraries(DDSHelloWorldSubscriber fastrtps fastcdr)
 
+file(GLOB DDS_OWNERSHIP_SOURCES "src/ownership/*.cxx")
+set(DDS_OWNERSHIP_SOURCES_HEADER "src/ownership")
+
+add_executable(DDSPublisherOwnership src/ownership/DDSPublisher_ownership.cpp ${DDS_OWNERSHIP_SOURCES})
+target_include_directories(DDSPublisherOwnership PRIVATE ${DDS_OWNERSHIP_SOURCES_HEADER})
+target_link_libraries(DDSPublisherOwnership fastrtps fastcdr)
+
+add_executable(DDSSubscriberOwnership src/ownership/DDSSubscriber_ownership.cpp ${DDS_OWNERSHIP_SOURCES})
+target_include_directories(DDSSubscriberOwnership PRIVATE ${DDS_OWNERSHIP_SOURCES_HEADER})
+target_link_libraries(DDSSubscriberOwnership fastrtps fastcdr)
 ```
 
 ## Build
@@ -218,6 +228,7 @@ make clean && make
 
 ## Run
 
+### Helloworld sample
 start two command terminals.
 
 ```shell
@@ -228,3 +239,29 @@ cd dds_helloworld/build
 ```
 
 ![](./img/sample_result.png)
+
+
+### Ownership sample
+
+start three command terminals
+
+```shell
+cd dds_helloworld/build
+./DDSSubscriberOwnership
+ 
+// new terminal, low strength publisher
+./DDSPublisherOwnership 1
+ 
+// new terminal, higher strength publisher
+./DDSPublisherOwnership 10
+```
+
+start subscriber and strength=1 publisher
+![](img/sample_ownership1.png)
+
+start strength=10 publisher
+![](img/sample_ownership2.png)
+
+shutdown strength=10 publisher
+![](img/sample_ownership3.png)
+
